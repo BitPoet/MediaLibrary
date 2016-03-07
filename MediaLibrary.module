@@ -1,0 +1,238 @@
+<?php
+
+/**
+ * Simple Media Library module for ProcessWire
+ *
+ * Adds a "Media Library" tab to the pwlink dialog where you can
+ * pick files from library pages. Library pages are pages using
+ * the MediaLibrary template installed by this module that reside
+ * under the current page or one of its parents.
+ *
+ * Includes preview for image files.
+ *
+ * written 2016 by BitPoet https://github.com/BitPoet
+ * Released under Mozilla Public License v2
+ *
+ */
+
+class MediaLibrary extends WireData implements Module {
+	public static function getModuleInfo() {
+		return array(
+			"title"			=>	"Media Library",
+			"description"	=>	"Add media library template and extend CKEditor",
+			"version"		=>	"0.0.3",
+			"autoload"		=>	true,
+			"singular"		=>	true,
+			"requires"		=>	array("ProcessPageEditLink")
+		);
+	}
+	
+	public function init() {
+		$info = self::getModuleInfo();
+		$this->addHookAfter("ProcessPageEditLink::execute", $this, "appendLibraryPicker");
+		$this->addHookAfter("ProcessPageEditImageSelect::execute", $this, "appendImageLibraryPicker");
+		// It's currently not possible to add custom execute methods through hooks,
+		// so we do the processing in a before hook to the regular execute method
+		//$this->addHook("ProcessPageEditLink::executeMedia", $this, "getMediaList");
+		$this->addHookBefore("ProcessPageEditLink::execute", $this, "getMediaList");
+		
+		$baseurl = $this->config->urls->{$this->className()};
+		$basepath = $this->config->paths->{$this->className()};
+		$versionts = str_replace('.', '', $info["version"]) . "-" . filemtime($basepath . "MediaLibrary.js");
+		$this->config->scripts->add($baseurl . "MediaLibrary.js?v=" . $versionts);
+	}
+	
+	public function getMediaList($event) {
+		if( ! $this->input->get("mediafiles") ) return;
+
+		$files = array();
+
+		$obj = $event->object;
+		
+		if( ! $this->input->get("mediapageid") ) return wireEncodeJSON($files);
+		
+		$mpage = $this->pages->get($this->input->get("mediapageid"));
+		if( $mpage instanceof NullPage ) return wireEncodeJSON($files);
+		
+		foreach( $mpage->fields as $f ) {
+			if(!$f->type instanceof FieldtypeFile) continue;
+			foreach($mpage->get($f->name) as $file) {
+				$files[] = array($file->url, $f->getLabel() . ': ' . $file->basename, ($f->type instanceof FieldtypeImage) ? 1 : 0); 
+			}
+		}
+		
+		$event->return = json_encode($files);
+		$event->replace = true;
+	}
+	
+	public function appendLibraryPicker($event) {
+		$obj = $event->object;
+		$page = $obj->page;
+		$rendered = $event->return;
+		
+		$libraries = array();
+		foreach( $page->parents()->and($page) as $ppage ) {
+			$libs = $ppage->children("template=MediaLibrary, include=all");
+			foreach( $libs as $lib ) {
+				$libraries[] = $lib;
+			}
+		}
+		
+		$wr = new InputfieldWrapper();
+		$wr->attr("title", $this->_("Media Files"));
+		$wr->attr("id", "mediafiles");
+		$wr->addClass("WireTab");
+		$wr->collapsed = Inputfield::collapsedYes;
+		
+		$f = $this->modules->get("InputfieldSelect");
+		$f->attr("id+name", "mediafilelibrary");
+		$f->label = $this->_("Select library");
+		$f->description = $this->_("Select a library to display a list of files and images to pick from.");
+		foreach($libraries as $lib) {
+			$f->addOption($lib->id, $lib->title);
+		}
+		$wr->add($f);
+		
+		$f = $this->modules->get("InputfieldSelect");
+		$f->attr("id+name", "mediafiletarget");
+		$f->label = $this->_("Select file");
+		$f->description = $this->_("Pick a file or image from the selected library.");
+		$wr->add($f);
+		
+		$f = $this->modules->get("InputfieldMarkup");
+		$f->attr('id', "MediaLibraryPreviewWrap");
+		$f->label = $this->_("Preview");
+		$f->attr('value', "<img id='MediaLibraryPreview' style='height: 100px;' />");
+		$wr->add($f);
+		
+		$html = "\n<li class='Inputfield InputfieldWrapper  WireTab' id='link_media' title='" . $this->_("Media Library") . "'>"
+				. $wr->render()
+				. "</li>\n"
+		;
+		
+		$event->return = preg_replace('~^(.*)(</ul>)~sm', '$1' . $html . '$2', $rendered);
+	}
+	
+	public function appendImageLibraryPicker($event) {
+		$obj = $event->object;
+		$page = $obj->page;
+		$rendered = $event->return;
+		
+		$libraries = array();
+		foreach( $page->parents()->and($page) as $ppage ) {
+			$libs = $ppage->children("template=MediaLibrary, include=all");
+			foreach( $libs as $lib ) {
+				$libraries[] = $lib;
+			}
+		}
+
+		$f = $this->modules->get("InputfieldSelect");
+		$f->attr("id+name", "mediaimageslibrary");
+		$f->label = $this->_("Select a library");
+		$f->description = $this->_("Select a media library to pick from.");
+		foreach($libraries as $lib) {
+			$f->addOption($lib->id, $lib->title);
+		}
+		
+		$expandIcon = "<i class='toggle-icon fa fa-angle-down' data-to='fa-angle-right fa-angle-down'></i>";
+		
+		$html = "\n<li class='Inputfield InputfieldStateCollapsed collapsed1 Inputfield_mediaimageslibrary InputfieldColumnWidthFirst' id='wrap_media_image' title='" . $this->_("Media Library") . "'>"
+				. "<label for='mediaimageslibrary' class='InputfieldHeader InputfieldStateToggle'>" . $this->_("Media Library") . " $expandIcon</label>\n"
+				. "<div class='InputfieldContent'>\n"
+				. "<p class='description'>" . $this->_("Pick a media library to quickly select an image from its page") . "</p>\n"
+				. $f->render()
+				. "</div>"
+				. "</li>\n"
+		;
+
+		$event->return = preg_replace("~(<li[^>]+id='wrap_page_id')~sm", $html . '$1', $rendered);
+	}
+	
+	public function ___install() {
+		$fg = $this->fieldgroups->get("MediaLibrary");
+		if( !$fg ) {
+			$fg = new Fieldgroup();
+			$fg->name = "MediaLibrary";
+			$fg->add($this->fields->get("title"));
+			$fg->save();
+		}
+		
+		$tpl = $this->templates->get("MediaLibrary");
+		if( !$tpl ) {
+			$tpl = new Template();
+			$tpl->name = "MediaLibrary";
+			$tpl->fieldgroup = $fg;
+			$tpl->noChildren = 1;
+			$tpl->noAppendTemplateFile = 1;
+			$tpl->noPrependTemplateFile = 1;
+			$tpl->tags = "MediaLibrary";
+			$tpl->save();
+		}
+		
+		$f = $this->fields->get("MediaImages");
+		if( !$f ) {
+			$f = new Field();
+			$f->type = $this->modules->get("FieldtypeImage");
+			$f->name = "MediaImages";
+			$f->title = $this->_("MediaImages");
+			$f->outputFormat = FieldtypeFile::outputFormatArray;
+			$f->inputfieldClass = "InputfieldImage";
+			$f->extensions = "bmp jpg png gif jpeg";
+			$f->save();
+		}
+		if( !$fg->has($f) ) {
+			$fg->add($f);
+			$fg->save();
+		}
+		
+		$f = $this->fields->get("MediaFiles");
+		if( !$f ) {
+			$f = new Field();
+			$f->type = $this->modules->get("FieldtypeFile");
+			$f->name = "MediaFiles";
+			$f->title = $this->_("MediaFiles");
+			$f->outputFormat = FieldtypeFile::outputFormatArray;
+			$f->inputfieldClass = "InputfieldFile";
+			$f->extensions = "pdf doc docx xls xlsx ppt pptx bmp png jpg gif txt rtf zip";
+			$f->save();
+		}
+		if( !$fg->has($f) ) {
+			$fg->add($f);
+			$fg->save();
+		}
+	}
+	
+	public function ___uninstall() {
+		$deleteTemplate = true;
+		$deleteFields = true;
+		
+		$fldcnt = $this->pages->count("MediaFiles!='', include=all") + $this->pages->count("MediaImages!='', include=all");
+		if( $fldcnt > 0 ) {
+			$this->warning($this->_("Media files/images present, not deleting fields"));
+			$deleteFields = false;
+		}
+		
+		$tplcnt = $this->pages->count("template=MediaLibrary, include=all");
+		if( $tplcnt > 0 ) {
+			$this->warning($this->_("Pages with MediaLibrary template present, not deleting template"));
+			$deleteTemplate = false;
+		}
+
+		if( $deleteTemplate ) {
+			$tpl = $this->templates->get("MediaLibrary");
+			$tpl->delete();
+			$fg = $this->fieldgroups->get("MediaLibrary");
+			$fg->delete();
+			$this->message($this->_("Deleted template MediaLibrary"));
+		}
+		
+		if( $deleteFields ) {
+			$f = $this->fields->get("MediaImages");
+			$f->delete();
+			$f = $this->fields->get("MediaFiles");
+			$f->delete();
+			$this->message($this->_("Deleted fields for MediaLibrary"));
+		}
+	}
+}
+
