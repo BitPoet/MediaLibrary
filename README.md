@@ -7,7 +7,7 @@ Beta
 
 ## Compatibility
 
-Currently only tested with PW 2.7.2
+This branches is compatible with ProcessWire 3.x
 
 ## Description
 
