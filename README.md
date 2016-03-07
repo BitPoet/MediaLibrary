@@ -5,13 +5,17 @@ Simple Media Library Module for the ProcessWire CMS
 
 Beta
 
+## Compatibility
+
+Currently only tested with PW 2.7.2
+
 ## Description
 
 Adds a MediaLibrary template with MediaImages and MediaFiles fields to ProcessWire.
 
 Extends CKEditor's link and image pickers to allow quick selection of library pages. Only libraries under the edited page itself or one of its parents are available to keep things organized.
 
-Screencap will follow shortly.
+![Screen capture](https://bitpoet.github.io/img/medialibrarycapture.gif)
 
 ## License
 
