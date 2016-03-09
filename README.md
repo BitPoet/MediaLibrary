@@ -7,7 +7,7 @@ Beta
 
 ## Compatibility
 
-Currently only tested with PW 2.7.2
+Currently tested with PW 2.7, see pw3 branch for namespaced version tested with 3.x.
 
 ## Description
 
