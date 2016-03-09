@@ -1,0 +1,135 @@
+<?php
+
+/**
+ * Simple overview list of configured media libraries
+ */
+
+class ProcessMediaLibraries extends Process {
+	public static function getModuleInfo() {
+		return array(
+			"title"			=>	"Media Library Overview",
+			"description"	=>	"Display overview of media libraries in admin",
+			"version"		=>	"0.0.1",
+		);
+	}
+
+	public function execute() {
+		
+		$wrap = new InputfieldWrapper();
+		$wrap->attr('id', "MediaLibrariesWrap");
+		$wrap->addClass("WireTab");
+		$wrap->label = $this->_("Media Libraries Overview");
+		
+		$mrk = $this->modules->get("InputfieldMarkup");
+		$mrk->attr('id', 'MediaLibrariesTableMarkup');
+		
+		$tbl = $this->modules->get("MarkupAdminDataTable");
+		$tbl->setEncodeEntities(false);
+		
+		$tbl->headerRow(array(
+			$this->_("Media Page"),
+			$this->_("Path"),
+			$this->_("Images"),
+			$this->_("Files")
+		));
+		
+		foreach($this->pages->find("template=MediaLibrary") as $pg) {
+			$tbl->row(array(
+				"<a href='{$pg->editURL}'>{$pg->title}</a>",
+				implode(' / ', array_map(function($item) { return "<a href='{$this->config->urls->admin}page/?open=$item->id'>$item->title</a>"; }, $pg->parents()->getArray())),
+				$pg->MediaImages->count(),
+				$pg->MediaFiles->count()
+			));
+		}
+		
+		$mrk->value = $tbl->render();
+		
+		$wrap->append($mrk);
+		
+		$btn = $this->modules->get("InputfieldButton");
+		$btn->attr('id+name', 'AddMediaLibrary');
+		$btn->attr('value', $this->_("Add Library"));
+		$btn->attr('href', $this->page->url . 'add');
+		$btn->icon = 'plus';
+		$btn->addClass('head_button_clone');
+		
+		return $wrap->render() . "<div style='padding: 5px;'>" . $btn->render() . "</div>";
+	}
+	
+	function executeAdd() {
+		$frm = $this->modules->get("InputfieldForm");
+		$frm->attr('id+name', 'AddMediaLibraryForm');
+		$frm->attr('action', $this->page->url . "add");
+		$frm->attr('method', "POST");
+		$frm->title = $this->_("Add Media Library");
+		
+		$f = $this->modules->get('InputfieldPageListSelect');
+		$f->attr('id+name', 'MediaLibraryParent');
+		$f->title = $this->_("Parent Page");
+		$f->required = true;
+		$frm->append($f);
+		
+		$f = $this->modules->get('InputfieldText');
+		if($this->languages) {
+			$f->useLanguages = true;
+		}
+		$f->attr('id+name', 'MediaLibraryTitle');
+		$f->title = $this->_("Title");
+		$f->required = true;
+		$frm->append($f);
+		
+		$f = $this->modules->get("InputfieldSubmit");
+		$f->attr('id+name', 'AddMediaLibrarySubmit');
+		$f->attr('value', $this->_("Save"));
+		$frm->append($f);
+		
+		if( $this->input->post->AddMediaLibrarySubmit ) {
+			$frm->processInput($this->input->post);
+			
+			if($frm->getErrors()) {
+				$this->session->message("Errors found!");
+				$out = $frm->render();
+			} else {
+				$pagetitle = $frm->get("MediaLibraryTitle")->value;
+				$pagename = $this->sanitizer->pageName($pagetitle);
+				$parent = $frm->get("MediaLibraryParent")->value;
+				$this->session->message("Creating media page {$pagetitle} named {$pagename} under {$parent}");
+				
+				//$parent = $this->pages->get($parentid);
+				
+				$p = new Page();
+				$p->template = $this->templates->get("MediaLibrary");
+				$p->name = $pagename;
+				$p->title = $pagetitle;
+				$p->parent = $parent;
+				$p->save();
+				
+				//$session->redirect($this->page->url);
+				$out = "<p>Created Media Library</p>\n";
+			}
+		} else {
+			$this->session->message("No submission");
+			$out = $frm->render();
+		}
+		
+		return $out;;
+	}
+	
+	public function ___install() {
+		$admin = $this->pages->get($this->config->adminRootPageID);
+		$pg = $admin->child("name=media");
+		if( ! $pg instanceof NullPage ) {
+			throw new WireException($this->_("Already a media page present under admin, cancelling installation"));
+		}
+		$pg = new Page();
+		$pg->template = 'admin';
+		$pg->name = "media";
+		$pg->parent = $admin;
+		$pg->title = "Media";
+		$pg->save();
+		$pg->process = $this->className();
+		$pg->addStatus(Page::statusLocked);
+		$pg->save();
+	}
+}
+
