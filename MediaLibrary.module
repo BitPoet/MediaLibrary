@@ -19,7 +19,7 @@ class MediaLibrary extends WireData implements Module {
 	public static function getModuleInfo() {
 		return array(
 			"title"			=>	"Media Library",
-			"description"	=>	"Add media library template and extend CKEditor",
+			"summary"		=>	"Simple Media Library module for ProcessWire",
 			"version"		=>	"0.0.4",
 			"autoload"		=>	true,
 			"singular"		=>	true,
