@@ -20,10 +20,11 @@ class MediaLibrary extends WireData implements Module {
 		return array(
 			"title"			=>	"Media Library",
 			"description"	=>	"Add media library template and extend CKEditor",
-			"version"		=>	"0.0.3",
+			"version"		=>	"0.0.4",
 			"autoload"		=>	true,
 			"singular"		=>	true,
-			"requires"		=>	array("ProcessPageEditLink")
+			"requires"		=>	array("ProcessPageEditLink"),
+			"installs"		=>	array("ProcessMediaLibraries"),
 		);
 	}
 	
@@ -97,12 +98,14 @@ class MediaLibrary extends WireData implements Module {
 		$f->attr("id+name", "mediafiletarget");
 		$f->label = $this->_("Select file");
 		$f->description = $this->_("Pick a file or image from the selected library.");
+		$f->columnWidth = 75;
 		$wr->add($f);
 		
 		$f = $this->modules->get("InputfieldMarkup");
 		$f->attr('id', "MediaLibraryPreviewWrap");
 		$f->label = $this->_("Preview");
 		$f->attr('value', "<img id='MediaLibraryPreview' style='height: 100px;' />");
+		$f->columnWidth = 25;
 		$wr->add($f);
 		
 		$html = "\n<li class='Inputfield InputfieldWrapper  WireTab' id='link_media' title='" . $this->_("Media Library") . "'>"
@@ -178,6 +181,8 @@ class MediaLibrary extends WireData implements Module {
 			$f->outputFormat = FieldtypeFile::outputFormatArray;
 			$f->inputfieldClass = "InputfieldImage";
 			$f->extensions = "bmp jpg png gif jpeg";
+			$f->adminThumbs = true;
+			$f->defaultGrid = true;
 			$f->save();
 		}
 		if( !$fg->has($f) ) {
