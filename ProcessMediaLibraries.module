@@ -8,7 +8,7 @@ class ProcessMediaLibraries extends Process {
 	public static function getModuleInfo() {
 		return array(
 			"title"			=>	"Media Library Overview",
-			"description"	=>	"Display overview of media libraries in admin",
+			"summary"		=>	"Display overview of media libraries in admin",
 			"version"		=>	"0.0.1",
 		);
 	}
