@@ -17,6 +17,10 @@ Extends CKEditor's link and image pickers to allow quick selection of library pa
 
 ![Screen capture](https://bitpoet.github.io/img/medialibrarycapture.gif)
 
+An overview of all configured libraries is available in the "Media" entry in the backend:
+
+![Screenshot Media Overview](https://bitpoet.github.io/img/medialibrary.png)
+
 ## License
 
 Mozilla Public License v2, see LICENSE file for details.
