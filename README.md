@@ -7,7 +7,7 @@ Beta
 
 ## Compatibility
 
-Currently tested with PW 2.7, see pw3 branch for namespaced version tested with 3.x.
+Currently tested with PW 2.7, see [pw3 branch](https://github.com/BitPoet/MediaLibrary/tree/pw3) for namespaced version tested with 3.x.
 
 ## Description
 
