@@ -9,7 +9,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.0.3",
+			"version"		=>	"0.0.4",
 		);
 	}
 
@@ -46,17 +46,27 @@ class ProcessMediaLibraries extends Process {
 		
 		$wrap->append($mrk);
 		
-		$btn = $this->modules->get("InputfieldButton");
-		$btn->attr('id+name', 'AddMediaLibrary');
-		$btn->attr('value', $this->_("Add Library"));
-		$btn->attr('href', $this->page->url . 'add');
-		$btn->icon = 'plus';
-		$btn->addClass('head_button_clone');
-		
-		return $wrap->render() . "<div style='padding: 5px;'>" . $btn->render() . "</div>";
+		if(! $this->templateExists()) {
+			$f = $this->modules->get("InputfieldMarkup");
+			$f->attr('id', 'MediaLibrariesProblemMarkup');
+			$f->value = '<p>' . $this->_("MediaLibrary template missing. You may need to install/re-install the MediaLibrary module.") . '</p>';
+		} else {
+			$f = $this->modules->get("InputfieldButton");
+			$f->attr('id+name', 'AddMediaLibrary');
+			$f->attr('value', $this->_("Add Library"));
+			$f->attr('href', $this->page->url . 'add');
+			$f->icon = 'plus';
+			$f->addClass('head_button_clone');
+		}
+				
+		return $wrap->render() . "<div style='padding: 5px;'>" . $f->render() . "</div>";
 	}
 	
 	function executeAdd() {
+		if(! $this->templateExists()) {
+			$this->session->error($this->_("MediaLibrary template missing. You may need to install/re-install MediaLibrary module."));
+			$this->session->redirect($this->page->url);
+		}
 		$frm = $this->modules->get("InputfieldForm");
 		$frm->attr('id+name', 'AddMediaLibraryForm');
 		$frm->attr('action', $this->page->url . "add");
@@ -100,7 +110,7 @@ class ProcessMediaLibraries extends Process {
 				$p->title = $pagetitle;
 				$p->parent = $parent;
 				$p->save();
-				
+
 				$this->session->message($this->_("Media page {$pagetitle} created"));
 				$this->session->redirect($this->page->url);
 			}
@@ -113,6 +123,11 @@ class ProcessMediaLibraries extends Process {
 		}
 		
 		return $out;
+	}
+	
+	protected function templateExists() {
+		if($this->templates->get("MediaLibrary")) return true;
+		return false;
 	}
 	
 	public function ___install() {
