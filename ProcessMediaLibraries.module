@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
  * Simple overview list of configured media libraries
@@ -9,7 +9,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.0.1",
+			"version"		=>	"0.0.2",
 		);
 	}
 
@@ -95,8 +95,6 @@ class ProcessMediaLibraries extends Process {
 				$parent = $frm->get("MediaLibraryParent")->value;
 				$this->session->message("Creating media page {$pagetitle} named {$pagename} under {$parent}");
 				
-				//$parent = $this->pages->get($parentid);
-				
 				$p = new Page();
 				$p->template = $this->templates->get("MediaLibrary");
 				$p->name = $pagename;
@@ -104,15 +102,17 @@ class ProcessMediaLibraries extends Process {
 				$p->parent = $parent;
 				$p->save();
 				
-				//$session->redirect($this->page->url);
-				$out = "<p>Created Media Library</p>\n";
+				$session->redirect($this->page->url);
 			}
 		} else {
-			$this->session->message("No submission");
+			if(! $frm->get("MediaLibraryParent")->value) {
+				$frm->get("MediaLibraryParent")->set('value', $this->config->rootPageID);
+			}
+			
 			$out = $frm->render();
 		}
 		
-		return $out;;
+		return $out;
 	}
 	
 	public function ___install() {
