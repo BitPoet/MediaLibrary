@@ -91,7 +91,7 @@ class ProcessMediaLibraries extends Process {
 				$out = $frm->render();
 			} else {
 				$pagetitle = $frm->get("MediaLibraryTitle")->value;
-				$pagename = $this->sanitizer->pageName($pagetitle);
+				$pagename = $this->sanitizer->pageName($pagetitle, true);
 				$parent = $frm->get("MediaLibraryParent")->value;
 				
 				$p = new Page();
