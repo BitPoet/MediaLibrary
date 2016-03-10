@@ -7,7 +7,7 @@ Beta
 
 ## Compatibility
 
-Currently tested with PW 2.7 and PW 3.0.
+Currently tested with PW 2.6, 2.7 and PW 3.0.
 
 ## Description
 
