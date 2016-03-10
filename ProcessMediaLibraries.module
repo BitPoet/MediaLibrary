@@ -102,7 +102,7 @@ class ProcessMediaLibraries extends Process {
 				$p->parent = $parent;
 				$p->save();
 				
-				$session->redirect($this->page->url);
+				$this->session->redirect($this->page->url);
 			}
 		} else {
 			if(! $frm->get("MediaLibraryParent")->value) {
