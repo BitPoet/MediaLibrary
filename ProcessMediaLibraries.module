@@ -93,7 +93,6 @@ class ProcessMediaLibraries extends Process {
 				$pagetitle = $frm->get("MediaLibraryTitle")->value;
 				$pagename = $this->sanitizer->pageName($pagetitle);
 				$parent = $frm->get("MediaLibraryParent")->value;
-				$this->session->message("Creating media page {$pagetitle} named {$pagename} under {$parent}");
 				
 				$p = new Page();
 				$p->template = $this->templates->get("MediaLibrary");
@@ -101,7 +100,8 @@ class ProcessMediaLibraries extends Process {
 				$p->title = $pagetitle;
 				$p->parent = $parent;
 				$p->save();
-				
+
+				$this->session->message($this->_("Media page {$pagetitle} created"));
 				$this->session->redirect($this->page->url);
 			}
 		} else {
