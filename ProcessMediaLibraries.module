@@ -9,7 +9,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.0.4",
+			"version"		=>	"0.0.5",
 		);
 	}
 
@@ -101,12 +101,12 @@ class ProcessMediaLibraries extends Process {
 				$out = $frm->render();
 			} else {
 				$pagetitle = $frm->get("MediaLibraryTitle")->value;
-				$pagename = $this->sanitizer->pageName($pagetitle, true);
+				//$pagename = $this->sanitizer->pageName($pagetitle, true);
 				$parent = $frm->get("MediaLibraryParent")->value;
 				
 				$p = new Page();
 				$p->template = $this->templates->get("MediaLibrary");
-				$p->name = $pagename;
+				//$p->name = $pagename;
 				$p->title = $pagetitle;
 				$p->parent = $parent;
 				$p->save();
