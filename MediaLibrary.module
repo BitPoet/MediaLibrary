@@ -225,17 +225,17 @@ class MediaLibrary extends WireData implements Module {
 
 		if( $deleteTemplate ) {
 			$tpl = $this->templates->get("MediaLibrary");
-			$tpl->delete();
+			$this->templates->delete($tpl);
 			$fg = $this->fieldgroups->get("MediaLibrary");
-			$fg->delete();
+			$this->fieldgroups->delete($fg);
 			$this->message($this->_("Deleted template MediaLibrary"));
 		}
 		
 		if( $deleteFields ) {
 			$f = $this->fields->get("MediaImages");
-			$f->delete();
+			$this->fields->delete($f);
 			$f = $this->fields->get("MediaFiles");
-			$f->delete();
+			$this->fields->delete($f);
 			$this->message($this->_("Deleted fields for MediaLibrary"));
 		}
 	}
