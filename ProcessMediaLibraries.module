@@ -9,7 +9,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.0.2",
+			"version"		=>	"0.0.3",
 		);
 	}
 
@@ -102,7 +102,7 @@ class ProcessMediaLibraries extends Process {
 				$p->parent = $parent;
 				$p->save();
 				
-				$session->redirect($this->page->url);
+				$this->session->redirect($this->page->url);
 			}
 		} else {
 			if(! $frm->get("MediaLibraryParent")->value) {
@@ -130,6 +130,15 @@ class ProcessMediaLibraries extends Process {
 		$pg->process = $this->className();
 		$pg->addStatus(Page::statusLocked);
 		$pg->save();
+	}
+
+	public function ___uninstall() {
+		$admin = $this->pages->get($this->config->adminRootPageID);
+		$pg = $admin->child("name=media");
+		if(! $pg instanceof NullPage) {
+			$pg->removeStatus(Page::statusLocked);
+			$pg->delete();
+		}
 	}
 }
 
