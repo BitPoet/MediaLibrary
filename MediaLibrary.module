@@ -20,7 +20,7 @@ class MediaLibrary extends WireData implements Module {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.0.5",
+			"version"		=>	"0.0.6",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink"),
@@ -69,6 +69,9 @@ class MediaLibrary extends WireData implements Module {
 	public function appendLibraryPicker($event) {
 		$obj = $event->object;
 		$page = $obj->page;
+		if($page->template->name == 'admin' && $this->input->get->id) {
+			$page = $this->pages->get($this->input->get->id);
+		}
 		$rendered = $event->return;
 		
 		$libraries = array();
@@ -119,6 +122,9 @@ class MediaLibrary extends WireData implements Module {
 	public function appendImageLibraryPicker($event) {
 		$obj = $event->object;
 		$page = $obj->page;
+		if($page->template->name == 'admin' && $this->input->get->id) {
+			$page = $this->pages->get($this->input->get->id);
+		}
 		$rendered = $event->return;
 		
 		$libraries = array();
