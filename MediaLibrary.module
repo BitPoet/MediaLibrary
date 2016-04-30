@@ -20,7 +20,7 @@ class MediaLibrary extends WireData implements Module {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.0.6",
+			"version"		=>	"0.0.7",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink"),
@@ -41,6 +41,23 @@ class MediaLibrary extends WireData implements Module {
 		$basepath = $this->config->paths->{$this->className()};
 		$versionts = str_replace('.', '', $info["version"]) . "-" . filemtime($basepath . "MediaLibrary.js");
 		$this->config->scripts->add($baseurl . "MediaLibrary.js?v=" . $versionts);
+	}
+	
+	public function ___getPageMediaLibraries($pg) {
+		$libraries = array();
+		foreach($pg->parents->and($pg) as $ppage) {
+			$libraries = array_merge($libraries, $this->getChildLibraries($ppage));
+		}
+		return $libraries;
+	}
+	
+	private function getChildLibraries($pg) {
+		$libs = array();
+		foreach($pg->children("template=MediaLibrary, include=hidden") as $cmedia) {
+			$libs[] = $cmedia;
+			$libs = array_merge($libs, $this->getChildLibraries($cmedia));
+		}
+		return $libs;
 	}
 	
 	public function getMediaList($event) {
@@ -74,13 +91,7 @@ class MediaLibrary extends WireData implements Module {
 		}
 		$rendered = $event->return;
 		
-		$libraries = array();
-		foreach( $page->parents()->and($page) as $ppage ) {
-			$libs = $ppage->children("template=MediaLibrary, include=all");
-			foreach( $libs as $lib ) {
-				$libraries[] = $lib;
-			}
-		}
+		$libraries = $this->getPageMediaLibraries($page);
 		
 		$wr = new InputfieldWrapper();
 		$wr->attr("title", $this->_("Media Files"));
@@ -121,19 +132,18 @@ class MediaLibrary extends WireData implements Module {
 	
 	public function appendImageLibraryPicker($event) {
 		$obj = $event->object;
-		$page = $obj->page;
-		if($page->template->name == 'admin' && $this->input->get->id) {
-			$page = $this->pages->get($this->input->get->id);
+		$editID = (int) $this->wire('session')->get($obj, 'edit_page_id');
+		if($editID) {
+			$page = $this->wire('pages')->get($editID);
+		} else {
+			$page = $obj->page;
+			if($page->template->name == 'admin' && $this->input->get->id) {
+				$page = $this->pages->get($this->input->get->id);
+			}
 		}
 		$rendered = $event->return;
 		
-		$libraries = array();
-		foreach( $page->parents()->and($page) as $ppage ) {
-			$libs = $ppage->children("template=MediaLibrary, include=all");
-			foreach( $libs as $lib ) {
-				$libraries[] = $lib;
-			}
-		}
+		$libraries = $this->getPageMediaLibraries($page);
 
 		$f = $this->modules->get("InputfieldSelect");
 		$f->attr("id+name", "mediaimageslibrary");
