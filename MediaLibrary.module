@@ -186,6 +186,9 @@ class MediaLibrary extends WireData implements Module {
 			$tpl->noPrependTemplateFile = 1;
 			$tpl->tags = "MediaLibrary";
 			$tpl->save();
+			$tpl->noChildren = 0;
+			$tpl->childTemplates = array($tpl->id);
+			$tpl->save();
 		}
 		
 		$f = $this->fields->get("MediaImages");
@@ -253,6 +256,17 @@ class MediaLibrary extends WireData implements Module {
 			$f = $this->fields->get("MediaFiles");
 			$this->fields->delete($f);
 			$this->message($this->_("Deleted fields for MediaLibrary"));
+		}
+	}
+
+	public function ___upgrade($from, $to) {
+		if(version_compare($from, "0.0.7", "<")) {
+			$tpl = $this->templates->get("MediaLibrary");
+			if($tpl) {
+				$tpl->noChildren = 0;
+				$tpl->childTemplates = array($tpl->id);
+				$tpl->save();
+			}
 		}
 	}
 }
