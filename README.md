@@ -23,6 +23,7 @@ An overview of all configured libraries is available in the "Media" entry in the
 
 ## Changelog
 
+* 0.0.8: Choose either select dropdown or radios as library selection method in module configuration
 * 0.0.7: Allow nesting of libraries (sublibraries of relevant libraries are also listed in link and image picker).
 * 0.0.7: Fixed a bug in the image picker where the libraries dropdown was filled incorrectly after a library was selected.
 
