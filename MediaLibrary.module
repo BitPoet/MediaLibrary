@@ -15,17 +15,25 @@
  *
  */
 
-class MediaLibrary extends WireData implements Module {
+class MediaLibrary extends WireData implements Module, ConfigurableModule {
 	public static function getModuleInfo() {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.0.7",
+			"version"		=>	"0.0.8",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink"),
 			"installs"		=>	array("ProcessMediaLibraries"),
 		);
+	}
+
+    protected static $configDefaults = array(
+		"medialibraryinput"	=>	"InputfieldSelect"
+	);
+	
+	public function __construct() {
+    	$this->setArray(self::$configDefaults);
 	}
 	
 	public function init() {
@@ -99,7 +107,10 @@ class MediaLibrary extends WireData implements Module {
 		$wr->addClass("WireTab");
 		$wr->collapsed = Inputfield::collapsedYes;
 		
-		$f = $this->modules->get("InputfieldSelect");
+		$inpclass = $this->medialibraryinput;
+		if(! $inpclass ) $inpclass = "InputfieldSelect";
+		
+		$f = $this->modules->get($inpclass);
 		$f->attr("id+name", "mediafilelibrary");
 		$f->label = $this->_("Select library");
 		$f->description = $this->_("Select a library to display a list of files and images to pick from.");
@@ -145,7 +156,10 @@ class MediaLibrary extends WireData implements Module {
 		
 		$libraries = $this->getPageMediaLibraries($page);
 
-		$f = $this->modules->get("InputfieldSelect");
+		$inpclass = $this->medialibraryinput;
+		if(! $inpclass ) $inpclass = "InputfieldSelect";
+
+		$f = $this->modules->get($inpclass);
 		$f->attr("id+name", "mediaimageslibrary");
 		$f->label = $this->_("Select a library");
 		$f->description = $this->_("Select a media library to pick from.");
@@ -268,6 +282,23 @@ class MediaLibrary extends WireData implements Module {
 				$tpl->save();
 			}
 		}
+	}
+
+	public static function getModuleConfigInputfields(array $data) {
+		$data = array_merge(self::$configDefaults, $data);
+
+		$wrap = new InputfieldWrapper();
+		
+		$f = wire('modules')->get("InputfieldSelect");
+		$f->attr("id+name", "medialibraryinput");
+		$f->label = wire()->_("Input for Library Chooser");
+		$f->description = wire()->_("Select which input should be used to let the user pick from selectable libraries.");
+		$f->addOption("InputfieldSelect", "Select (Dropdown)");
+		$f->addOption("InputfieldRadios", "Radios");
+		$f->attr('value', $data["medialibraryinput"]);
+		$wrap->add($f);
+		
+		return $wrap;
 	}
 }
 
