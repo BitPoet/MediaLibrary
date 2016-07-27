@@ -20,7 +20,7 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.0.8",
+			"version"		=>	"0.0.9",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink"),
