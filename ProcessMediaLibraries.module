@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 <?php namespace ProcessWire;
-=======
-<?php
->>>>>>> refs/remotes/origin/master
 
 /**
  * Simple overview list of configured media libraries
