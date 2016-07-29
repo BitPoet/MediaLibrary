@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 <?php namespace ProcessWire;
+=======
+<?php
+>>>>>>> refs/remotes/origin/master
 
 /**
  * Simple overview list of configured media libraries
@@ -9,7 +13,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.0.5",
+			"version"		=>	"0.1.0",
 		);
 	}
 
@@ -33,12 +37,13 @@ class ProcessMediaLibraries extends Process {
 			$this->_("Files")
 		));
 		
+		$adminUrl = $this->config->urls->admin;
 		foreach($this->pages->find("template=MediaLibrary") as $pg) {
 			$tbl->row(array(
 				"<a href='{$pg->editURL}'>{$pg->title}</a>",
-				implode(' / ', array_map(function($item) { return "<a href='{$this->config->urls->admin}page/?open=$item->id'>$item->title</a>"; }, $pg->parents()->getArray())),
-				$pg->MediaImages->count(),
-				$pg->MediaFiles->count()
+				implode(' / ', array_map(function($item) use($adminUrl) { return "<a href='{$adminUrl}page/?open=$item->id'>$item->title</a>"; }, $pg->parents()->getArray())),
+				$pg->MediaImages ? $pg->MediaImages->count() : 0,
+				$pg->MediaFiles ? $pg->MediaFiles->count() : 0
 			));
 		}
 		

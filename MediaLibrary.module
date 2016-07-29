@@ -15,17 +15,25 @@
  *
  */
 
-class MediaLibrary extends WireData implements Module {
+class MediaLibrary extends WireData implements Module, ConfigurableModule {
 	public static function getModuleInfo() {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.0.5",
+			"version"		=>	"0.1.0",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink"),
 			"installs"		=>	array("ProcessMediaLibraries"),
 		);
+	}
+
+    protected static $configDefaults = array(
+		"medialibraryinput"	=>	"InputfieldSelect"
+	);
+	
+	public function __construct() {
+    	$this->setArray(self::$configDefaults);
 	}
 	
 	public function init() {
@@ -41,6 +49,23 @@ class MediaLibrary extends WireData implements Module {
 		$basepath = $this->config->paths->{$this->className()};
 		$versionts = str_replace('.', '', $info["version"]) . "-" . filemtime($basepath . "MediaLibrary.js");
 		$this->config->scripts->add($baseurl . "MediaLibrary.js?v=" . $versionts);
+	}
+	
+	public function ___getPageMediaLibraries($pg) {
+		$libraries = array();
+		foreach($pg->parents->and($pg) as $ppage) {
+			$libraries = array_merge($libraries, $this->getChildLibraries($ppage));
+		}
+		return $libraries;
+	}
+	
+	private function getChildLibraries($pg) {
+		$libs = array();
+		foreach($pg->children("template=MediaLibrary, include=hidden") as $cmedia) {
+			$libs[] = $cmedia;
+			$libs = array_merge($libs, $this->getChildLibraries($cmedia));
+		}
+		return $libs;
 	}
 	
 	public function getMediaList($event) {
@@ -69,15 +94,12 @@ class MediaLibrary extends WireData implements Module {
 	public function appendLibraryPicker($event) {
 		$obj = $event->object;
 		$page = $obj->page;
+		if($page->template->name == 'admin' && $this->input->get->id) {
+			$page = $this->pages->get($this->input->get->id);
+		}
 		$rendered = $event->return;
 		
-		$libraries = array();
-		foreach( $page->parents()->and($page) as $ppage ) {
-			$libs = $ppage->children("template=MediaLibrary, include=all");
-			foreach( $libs as $lib ) {
-				$libraries[] = $lib;
-			}
-		}
+		$libraries = $this->getPageMediaLibraries($page);
 		
 		$wr = new InputfieldWrapper();
 		$wr->attr("title", $this->_("Media Files"));
@@ -85,7 +107,10 @@ class MediaLibrary extends WireData implements Module {
 		$wr->addClass("WireTab");
 		$wr->collapsed = Inputfield::collapsedYes;
 		
-		$f = $this->modules->get("InputfieldSelect");
+		$inpclass = $this->medialibraryinput;
+		if(! $inpclass ) $inpclass = "InputfieldSelect";
+		
+		$f = $this->modules->get($inpclass);
 		$f->attr("id+name", "mediafilelibrary");
 		$f->label = $this->_("Select library");
 		$f->description = $this->_("Select a library to display a list of files and images to pick from.");
@@ -118,18 +143,23 @@ class MediaLibrary extends WireData implements Module {
 	
 	public function appendImageLibraryPicker($event) {
 		$obj = $event->object;
-		$page = $obj->page;
-		$rendered = $event->return;
-		
-		$libraries = array();
-		foreach( $page->parents()->and($page) as $ppage ) {
-			$libs = $ppage->children("template=MediaLibrary, include=all");
-			foreach( $libs as $lib ) {
-				$libraries[] = $lib;
+		$editID = (int) $this->wire('session')->get($obj, 'edit_page_id');
+		if($editID) {
+			$page = $this->wire('pages')->get($editID);
+		} else {
+			$page = $obj->page;
+			if($page->template->name == 'admin' && $this->input->get->id) {
+				$page = $this->pages->get($this->input->get->id);
 			}
 		}
+		$rendered = $event->return;
+		
+		$libraries = $this->getPageMediaLibraries($page);
 
-		$f = $this->modules->get("InputfieldSelect");
+		$inpclass = $this->medialibraryinput;
+		if(! $inpclass ) $inpclass = "InputfieldSelect";
+
+		$f = $this->modules->get($inpclass);
 		$f->attr("id+name", "mediaimageslibrary");
 		$f->label = $this->_("Select a library");
 		$f->description = $this->_("Select a media library to pick from.");
@@ -169,6 +199,9 @@ class MediaLibrary extends WireData implements Module {
 			$tpl->noAppendTemplateFile = 1;
 			$tpl->noPrependTemplateFile = 1;
 			$tpl->tags = "MediaLibrary";
+			$tpl->save();
+			$tpl->noChildren = 0;
+			$tpl->childTemplates = array($tpl->id);
 			$tpl->save();
 		}
 		
@@ -238,6 +271,34 @@ class MediaLibrary extends WireData implements Module {
 			$this->fields->delete($f);
 			$this->message($this->_("Deleted fields for MediaLibrary"));
 		}
+	}
+
+	public function ___upgrade($from, $to) {
+		if(version_compare($from, "0.0.7", "<")) {
+			$tpl = $this->templates->get("MediaLibrary");
+			if($tpl) {
+				$tpl->noChildren = 0;
+				$tpl->childTemplates = array($tpl->id);
+				$tpl->save();
+			}
+		}
+	}
+
+	public static function getModuleConfigInputfields(array $data) {
+		$data = array_merge(self::$configDefaults, $data);
+
+		$wrap = new InputfieldWrapper();
+		
+		$f = wire('modules')->get("InputfieldSelect");
+		$f->attr("id+name", "medialibraryinput");
+		$f->label = wire()->_("Input for Library Chooser");
+		$f->description = wire()->_("Select which input should be used to let the user pick from selectable libraries.");
+		$f->addOption("InputfieldSelect", "Select (Dropdown)");
+		$f->addOption("InputfieldRadios", "Radios");
+		$f->attr('value', $data["medialibraryinput"]);
+		$wrap->add($f);
+		
+		return $wrap;
 	}
 }
 

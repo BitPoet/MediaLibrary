@@ -1,5 +1,5 @@
 $(document).ready(function() {
-	$('#mediafilelibrary').on('change', function(evt) {
+	$('#mediafilelibrary, input[name=mediafilelibrary]:radio').on('change', function(evt) {
 		var tgt = $('#mediafiletarget');
 		tgt.empty();
 		$.ajax({
@@ -39,7 +39,7 @@ $(document).ready(function() {
 		}
 	});
 	
-	$('#mediaimageslibrary').on('change', function(evt) {
+	$('#mediaimageslibrary, input[name=mediaimageslibrary]:radio').on('change', function(evt) {
 		$sel = $(this);
 		$page_id = $('#page_id');
 		$page_id.trigger('pageSelected', {id: $sel.val()});
