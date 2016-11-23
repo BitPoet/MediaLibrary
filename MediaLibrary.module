@@ -20,7 +20,7 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.1.0",
+			"version"		=>	"0.1.1",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink"),
@@ -29,7 +29,8 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 	}
 
     protected static $configDefaults = array(
-		"medialibraryinput"	=>	"InputfieldSelect"
+		"medialibraryinput"		=>	"InputfieldSelect",
+		"medialibrarycollapsed"	=>	"1"
 	);
 	
 	public function __construct() {
@@ -105,7 +106,7 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		$wr->attr("title", $this->_("Media Files"));
 		$wr->attr("id", "mediafiles");
 		$wr->addClass("WireTab");
-		$wr->collapsed = Inputfield::collapsedYes;
+		$wr->collapsed = $this->medialibrarycollapsed ? Inputfield::collapsedYes : Inputfield::collapsedNo;
 		
 		$inpclass = $this->medialibraryinput;
 		if(! $inpclass ) $inpclass = "InputfieldSelect";
@@ -169,7 +170,9 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		
 		$expandIcon = "<i class='toggle-icon fa fa-angle-down' data-to='fa-angle-right fa-angle-down'></i>";
 		
-		$html = "\n<li class='Inputfield InputfieldStateCollapsed collapsed1 Inputfield_mediaimageslibrary InputfieldColumnWidthFirst' id='wrap_media_image' title='" . $this->_("Media Library") . "'>"
+		$collapsedClasses = $this->medialibrarycollapsed ? "InputfieldStateCollapsed collapsed1" : "";
+		
+		$html = "\n<li class='Inputfield $collapsedClasses Inputfield_mediaimageslibrary InputfieldColumnWidthFirst' id='wrap_media_image' title='" . $this->_("Media Library") . "'>"
 				. "<label for='mediaimageslibrary' class='InputfieldHeader InputfieldStateToggle'>" . $this->_("Media Library") . " $expandIcon</label>\n"
 				. "<div class='InputfieldContent'>\n"
 				. "<p class='description'>" . $this->_("Pick a media library to quickly select an image from its page") . "</p>\n"
@@ -296,6 +299,15 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		$f->addOption("InputfieldSelect", "Select (Dropdown)");
 		$f->addOption("InputfieldRadios", "Radios");
 		$f->attr('value', $data["medialibraryinput"]);
+		$wrap->add($f);
+		
+		$f = wire('modules')->get("InputfieldRadios");
+		$f->attr("id+name", "medialibrarycollapsed");
+		$f->label = wire()->_("Library field collapsed");
+		$f->description = wire()->_("Show the library selection in the image editor collapsed by default.");
+		$f->addOption("1", wire()->_("Yes (default)"));
+		$f->addOption("0", wire()->_("No (show expanded)"));
+		$f->attr('value', $data["medialibrarycollapsed"]);
 		$wrap->add($f);
 		
 		return $wrap;
