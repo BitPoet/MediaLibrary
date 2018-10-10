@@ -20,7 +20,7 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.1.2",
+			"version"		=>	"0.1.3",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink", "ProcessWire>=3.0.0"),
@@ -31,7 +31,8 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
     protected static $configDefaults = array(
 		"medialibraryinput"		=>	"InputfieldSelect",
 		"medialibrarycollapsed"	=>	"1",
-		"medialibraryhidepages"	=>	false
+		"medialibraryhidepages"	=>	false,
+		"medialibraryhidepagesadmin" => false
 	);
 	
 	public function __construct() {
@@ -57,13 +58,12 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 	
 	public function hideLibraryPages(HookEvent $event) {
 		if(! $this->config->ajax) return;
-		if($this->user->isSuperuser()) return;
+		if($this->user->isSuperuser() && ! $this->medialibraryhidepagesadmin) return;
+		if(!$this->medialibraryhidepages) return;
 		
 		$modified = false;
 
 		$json = json_decode($event->return, true);
-		
-		$this->log->save('medialibrary', 'Hiding libraries from page list: ' . json_encode($json, \JSON_PRETTY_PRINT));
 		
 		foreach($json["children"] as $key => $child) {
 			$c = $this->pages->get($child['id']);
@@ -338,13 +338,20 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		$f->attr('value', $data["medialibrarycollapsed"]);
 		$wrap->add($f);
 		
-		$f - wire('modules')->get("InputfieldCheckbox");
+		$f = wire('modules')->get("InputfieldCheckbox");
 		$f->attr('name', 'medialibraryhidepages');
 		$f->label = wire()->_("Hide library pages");
 		$f->description = wire()->_("Hide library pages from the page tree for non-superusers");
-		if(exists($data["medialibraryhidepages"]) && $data["medialibraryhidepages"]) $f->attr('checked', 'checked');
+		if(isset($data["medialibraryhidepages"]) && $data["medialibraryhidepages"]) $f->attr('checked', 'checked');
 		$wrap->add($f);
 		
+		$f = wire('modules')->get("InputfieldCheckbox");
+		$f->attr('name', 'medialibraryhidepagesadmin');
+		$f->label = wire()->_("Hide for superusers too");
+		$f->description = wire()->_("Hide library pages from the page tree for superusers too if above option is checked");
+		if(isset($data["medialibraryhidepagesadmin"]) && $data["medialibraryhidepagesadmin"]) $f->attr('checked', 'checked');
+		$wrap->add($f);
+
 		return $wrap;
 	}
 }
