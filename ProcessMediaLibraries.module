@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
  * Simple overview list of configured media libraries
@@ -9,8 +9,15 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.1.1",
+			"version"		=>	"0.1.2",
 		);
+	}
+
+	public function init() {
+		$jqui = $this->modules->get("JqueryUI");
+		$jqui->use('modal');
+		
+		parent::init();
 	}
 
 	public function execute() {
@@ -30,16 +37,18 @@ class ProcessMediaLibraries extends Process {
 			$this->_("Media Page"),
 			$this->_("Path"),
 			$this->_("Images"),
-			$this->_("Files")
+			$this->_("Files"),
+			$this->_("Actions")
 		));
 		
 		$adminUrl = $this->config->urls->admin;
-		foreach($this->pages->find("template=MediaLibrary") as $pg) {
+		foreach($this->pages->find("template=MediaLibrary, include=hidden") as $pg) {
 			$tbl->row(array(
 				"<a href='{$pg->editURL}'>{$pg->title}</a>",
 				implode(' / ', array_map(function($item) use($adminUrl) { return "<a href='{$adminUrl}page/?open=$item->id'>$item->title</a>"; }, $pg->parents()->getArray())),
 				$pg->MediaImages ? $pg->MediaImages->count() : 0,
-				$pg->MediaFiles ? $pg->MediaFiles->count() : 0
+				$pg->MediaFiles ? $pg->MediaFiles->count() : 0,
+				"<a class='pw-modal pw-modal-small ml-delete fa fa-trash' data-buttons='#confirm_trash, #cancel_trash' data-autoclose='#confirm_trash' data-close='#cancel_trash' title='" . _("Delete library") . "' href='{$this->page->url}delete?id={$pg->id}&modal=1'> </a>"
 			));
 		}
 		
@@ -62,6 +71,87 @@ class ProcessMediaLibraries extends Process {
 				
 		return $wrap->render() . "<div style='padding: 5px;'>" . $f->render() . "</div>";
 	}
+	
+	
+	public function executeDelete() {
+		if(! $this->input->get->id) {
+			return _("Missing page id parameter!");
+		}
+		
+		$pageid = (int)$this->input->get->id;
+		$page = $this->pages->get($pageid);
+		
+		if($page instanceof NullPage || $page->template->name != 'MediaLibrary') {
+			return _("Page either does not exist or is not a media library!");
+		}
+		
+		$title = $page->title;
+		
+		if(! $page->trashable(true)) {
+			return _("Page cannot be trashed. Check permissions and page flags!");
+		}
+		
+		if($this->input->get->confirm_trash) {
+			if($this->pages->trash($page)) {
+				$this->session->message(sprintf(_("Media library '%s' moved to trash"), $title));
+				$wrap = new InputfieldWrapper();
+				
+				$f = $this->modules->get("InputfieldMarkup");
+				$f->label = _("Success");
+				$f->attr('value', sprintf(_("Media library '%s' moved to trash"), $title));
+				$wrap->append($f);
+				
+				/*
+				$btn = $this->modules->get("InputfieldButton");
+				$btn->addClass('nosubmit');
+				$btn->attr('id+name', 'confirm_close');
+				$btn->attr('value', _("Close popup"));
+				$btn->attr('data-close', '1');
+				$wrap->append($btn);
+				*/
+				
+				return	$wrap->render();
+			}
+		} else {
+			$frm = $this->modules->get("InputfieldForm");
+			$frm->attr('method', 'GET');
+			$frm->attr('action', "{$this->page->url}delete");
+			
+			$hidden = $this->modules->get("InputfieldHidden");
+			$hidden->attr('name', 'id');
+			$hidden->attr('value', $pageid);
+			$frm->append($hidden);
+			
+			$hidden = $this->modules->get("InputfieldHidden");
+			$hidden->attr('name', 'modal');
+			$hidden->attr('value', 1);
+			$frm->append($hidden);
+			
+			$f = $this->modules->get("InputfieldMarkup");
+			$f->attr('id+name', 'trash_msg');
+			$f->label = _("Procceed?");
+			$f->attr('value', sprintf(_("Really move library <strong>%s / %s</strong> into the trash bin?"), implode(' / ', $page->parents->explode('title')), $title));
+			$f->description = sprintf(_("Library contains %d images and %d files"), $page->media_images, $page->media_files);
+			$f->notes = _("Any files/images contained in this library will be deleted.");
+			$frm->append($f);
+			
+			$btn = $this->modules->get("InputfieldButton");
+			$btn->attr('type', 'submit');
+			$btn->attr('id+name', 'confirm_trash');
+			$btn->attr('value', _("Move to trash"));
+			$frm->append($btn);
+			
+			$btn = $this->modules->get("InputfieldButton");
+			$btn->attr('id+name', 'cancel_trash');
+			$btn->addClass("pw-modal-cancel");
+			$btn->attr('value', _("Cancel"));
+			$frm->append($btn);
+			
+			return $frm->render();
+		}
+
+	}
+	
 	
 	function executeAdd() {
 		if(! $this->templateExists()) {

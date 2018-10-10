@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
  * Simple Media Library module for ProcessWire
@@ -20,17 +20,18 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.1.1",
+			"version"		=>	"0.1.2",
 			"autoload"		=>	true,
 			"singular"		=>	true,
-			"requires"		=>	array("ProcessPageEditLink"),
+			"requires"		=>	array("ProcessPageEditLink", "ProcessWire>=3.0.0"),
 			"installs"		=>	array("ProcessMediaLibraries"),
 		);
 	}
 
     protected static $configDefaults = array(
 		"medialibraryinput"		=>	"InputfieldSelect",
-		"medialibrarycollapsed"	=>	"1"
+		"medialibrarycollapsed"	=>	"1",
+		"medialibraryhidepages"	=>	false
 	);
 	
 	public function __construct() {
@@ -45,11 +46,38 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		// so we do the processing in a before hook to the regular execute method
 		//$this->addHook("ProcessPageEditLink::executeMedia", $this, "getMediaList");
 		$this->addHookBefore("ProcessPageEditLink::execute", $this, "getMediaList");
+		// Hide library pages from the tree if enabled in module config
+		$this->addHookAfter('ProcessPageList::execute', $this, 'hideLibraryPages');
 		
 		$baseurl = $this->config->urls->{$this->className()};
 		$basepath = $this->config->paths->{$this->className()};
 		$versionts = str_replace('.', '', $info["version"]) . "-" . filemtime($basepath . "MediaLibrary.js");
 		$this->config->scripts->add($baseurl . "MediaLibrary.js?v=" . $versionts);
+	}
+	
+	public function hideLibraryPages(HookEvent $event) {
+		if(! $this->config->ajax) return;
+		if($this->user->isSuperuser()) return;
+		
+		$modified = false;
+
+		$json = json_decode($event->return, true);
+		
+		$this->log->save('medialibrary', 'Hiding libraries from page list: ' . json_encode($json, \JSON_PRETTY_PRINT));
+		
+		foreach($json["children"] as $key => $child) {
+			$c = $this->pages->get($child['id']);
+			if($c->template->name == "MediaLibrary") {
+				unset($json['children'][$key]);
+				$modified = true;
+			}
+		}
+		
+		// Return early if nothing was changed
+		if(! $modified) return;
+		
+		$json['children'] = array_values($json['children']);
+		$event->return = json_encode($json);
 	}
 	
 	public function ___getPageMediaLibraries($pg) {
@@ -308,6 +336,13 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		$f->addOption("1", wire()->_("Yes (default)"));
 		$f->addOption("0", wire()->_("No (show expanded)"));
 		$f->attr('value', $data["medialibrarycollapsed"]);
+		$wrap->add($f);
+		
+		$f - wire('modules')->get("InputfieldCheckbox");
+		$f->attr('name', 'medialibraryhidepages');
+		$f->label = wire()->_("Hide library pages");
+		$f->description = wire()->_("Hide library pages from the page tree for non-superusers");
+		if(exists($data["medialibraryhidepages"]) && $data["medialibraryhidepages"]) $f->attr('checked', 'checked');
 		$wrap->add($f);
 		
 		return $wrap;

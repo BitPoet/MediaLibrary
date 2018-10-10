@@ -7,7 +7,7 @@ Beta
 
 ## Compatibility
 
-Currently tested with PW 2.6, 2.7 and PW 3.0.
+This module is compatible with ProcessWire 3.0
 
 ## Description
 
@@ -23,6 +23,9 @@ An overview of all configured libraries is available in the "Media" entry in the
 
 ## Changelog
 
+* 0.1.2: Added option in MediaLibrary to hide libraries from the page tree and added namespace
+  Allow deletion of libraries from the Media admin page
+  No more support for legacy PW (< 3.0.0)
 * 0.1.1: Module config setting: show Media Libraries collapsed (default) or expanded in the image dialog
 * 0.1.0: Fix "Using $this when not in object context" error
 * 0.0.9: Avoid error when one of MediaImages or MediaFiles fields was removed from the MediaLibrary template
