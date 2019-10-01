@@ -9,7 +9,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.1.3",
+			"version"		=>	"0.1.4",
 		);
 	}
 
@@ -48,7 +48,7 @@ class ProcessMediaLibraries extends Process {
 				implode(' / ', array_map(function($item) use($adminUrl) { return "<a href='{$adminUrl}page/?open=$item->id'>$item->title</a>"; }, $pg->parents()->getArray())),
 				$pg->MediaImages ? $pg->MediaImages->count() : 0,
 				$pg->MediaFiles ? $pg->MediaFiles->count() : 0,
-				"<a class='pw-modal pw-modal-small ml-delete fa fa-trash' data-buttons='#confirm_trash, #cancel_trash' data-autoclose='#confirm_trash' data-close='#cancel_trash' title='" . _("Delete library") . "' href='{$this->page->url}delete?id={$pg->id}&modal=1'> </a>"
+				"<a class='pw-modal pw-modal-small ml-delete fa fa-trash' data-buttons='#confirm_trash, #cancel_trash' data-autoclose='#confirm_trash' data-close='#cancel_trash' title='" . $this->_("Delete library") . "' href='{$this->page->url}delete?id={$pg->id}&modal=1'> </a>"
 			));
 		}
 		
@@ -75,20 +75,20 @@ class ProcessMediaLibraries extends Process {
 	
 	public function executeDelete() {
 		if(! $this->input->get->id) {
-			return _("Missing page id parameter!");
+			return $this->_("Missing page id parameter!");
 		}
 		
 		$pageid = (int)$this->input->get->id;
 		$page = $this->pages->get($pageid);
 		
 		if($page instanceof NullPage || $page->template->name != 'MediaLibrary') {
-			return _("Page either does not exist or is not a media library!");
+			return $this->_("Page either does not exist or is not a media library!");
 		}
 		
 		$title = $page->title;
 		
 		if(! $page->trashable(true)) {
-			return _("Page cannot be trashed. Check permissions and page flags!");
+			return $this->_("Page cannot be trashed. Check permissions and page flags!");
 		}
 		
 		if($this->input->get->confirm_trash) {
@@ -97,7 +97,7 @@ class ProcessMediaLibraries extends Process {
 				$wrap = new InputfieldWrapper();
 				
 				$f = $this->modules->get("InputfieldMarkup");
-				$f->label = _("Success");
+				$f->label = $this->_("Success");
 				$f->attr('value', sprintf(_("Media library '%s' moved to trash"), $title));
 				$wrap->append($f);
 				
@@ -105,7 +105,7 @@ class ProcessMediaLibraries extends Process {
 				$btn = $this->modules->get("InputfieldButton");
 				$btn->addClass('nosubmit');
 				$btn->attr('id+name', 'confirm_close');
-				$btn->attr('value', _("Close popup"));
+				$btn->attr('value', $this->_("Close popup"));
 				$btn->attr('data-close', '1');
 				$wrap->append($btn);
 				*/
@@ -129,22 +129,22 @@ class ProcessMediaLibraries extends Process {
 			
 			$f = $this->modules->get("InputfieldMarkup");
 			$f->attr('id+name', 'trash_msg');
-			$f->label = _("Procceed?");
+			$f->label = $this->_("Procceed?");
 			$f->attr('value', sprintf(_("Really move library <strong>%s / %s</strong> into the trash bin?"), implode(' / ', $page->parents->explode('title')), $title));
 			$f->description = sprintf(_("Library contains %d images and %d files"), $page->media_images, $page->media_files);
-			$f->notes = _("Any files/images contained in this library will be deleted.");
+			$f->notes = $this->_("Any files/images contained in this library will be deleted.");
 			$frm->append($f);
 			
 			$btn = $this->modules->get("InputfieldButton");
 			$btn->attr('type', 'submit');
 			$btn->attr('id+name', 'confirm_trash');
-			$btn->attr('value', _("Move to trash"));
+			$btn->attr('value', $this->_("Move to trash"));
 			$frm->append($btn);
 			
 			$btn = $this->modules->get("InputfieldButton");
 			$btn->attr('id+name', 'cancel_trash');
 			$btn->addClass("pw-modal-cancel");
-			$btn->attr('value', _("Cancel"));
+			$btn->attr('value', $this->_("Cancel"));
 			$frm->append($btn);
 			
 			return $frm->render();
