@@ -23,6 +23,7 @@ An overview of all configured libraries is available in the "Media" entry in the
 
 ## Changelog
 
+* 0.1.4: Fix issue with underscore translation methods not being found
 * 0.1.2: Added option in MediaLibrary to hide libraries from the page tree and added namespace.
 * 0.1.2: Allow deletion of libraries from the Media admin page.
 * 0.1.2: No more support for legacy PW (< 3.0.0)
