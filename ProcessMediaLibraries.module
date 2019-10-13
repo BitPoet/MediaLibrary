@@ -9,7 +9,7 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.1.4",
+			"version"		=>	"0.1.5",
 		);
 	}
 
@@ -93,12 +93,12 @@ class ProcessMediaLibraries extends Process {
 		
 		if($this->input->get->confirm_trash) {
 			if($this->pages->trash($page)) {
-				$this->session->message(sprintf(_("Media library '%s' moved to trash"), $title));
+				$this->session->message(sprintf($this->_("Media library '%s' moved to trash"), $title));
 				$wrap = new InputfieldWrapper();
 				
 				$f = $this->modules->get("InputfieldMarkup");
 				$f->label = $this->_("Success");
-				$f->attr('value', sprintf(_("Media library '%s' moved to trash"), $title));
+				$f->attr('value', sprintf($this->_("Media library '%s' moved to trash"), $title));
 				$wrap->append($f);
 				
 				/*
@@ -130,8 +130,8 @@ class ProcessMediaLibraries extends Process {
 			$f = $this->modules->get("InputfieldMarkup");
 			$f->attr('id+name', 'trash_msg');
 			$f->label = $this->_("Procceed?");
-			$f->attr('value', sprintf(_("Really move library <strong>%s / %s</strong> into the trash bin?"), implode(' / ', $page->parents->explode('title')), $title));
-			$f->description = sprintf(_("Library contains %d images and %d files"), $page->media_images, $page->media_files);
+			$f->attr('value', sprintf($this->_("Really move library <strong>%s / %s</strong> into the trash bin?"), implode(' / ', $page->parents->explode('title')), $title));
+			$f->description = sprintf($this->_("Library contains %d images and %d files"), $page->media_images, $page->media_files);
 			$f->notes = $this->_("Any files/images contained in this library will be deleted.");
 			$frm->append($f);
 			
