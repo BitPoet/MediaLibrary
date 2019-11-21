@@ -9,7 +9,9 @@ class ProcessMediaLibraries extends Process {
 		return array(
 			"title"			=>	"Media Library Overview",
 			"summary"		=>	"Display overview of media libraries in admin",
-			"version"		=>	"0.1.5",
+			"version"		=>	"0.1.6",
+			"permission"	=>	"media-library",
+			"permissions"	=>	array("media-library" => "Access Media Libraries Manager")
 		);
 	}
 

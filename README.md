@@ -3,7 +3,7 @@ Simple Media Library Module for the ProcessWire CMS
 
 ## Status
 
-Beta
+Beta, very close to stable
 
 ## Compatibility
 
@@ -21,8 +21,13 @@ An overview of all configured libraries is available in the "Media" entry in the
 
 ![Screenshot Media Overview](https://bitpoet.github.io/img/medialibrary.png)
 
+## Permissions
+
+This module installs the permission "media-library" which enables access to the media libraries overpage page ("Media" menu item) in the backend to non-superusers. Many thanks to inspeCTor for the idea.
+
 ## Changelog
 
+* 0.1.6: Install media-library permission for the media libraries overview process page
 * 0.1.4: Fix issue with underscore translation methods not being found
 * 0.1.2: Added option in MediaLibrary to hide libraries from the page tree and added namespace.
 * 0.1.2: Allow deletion of libraries from the Media admin page.
