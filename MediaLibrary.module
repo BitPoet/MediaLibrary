@@ -20,7 +20,7 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		return array(
 			"title"			=>	"Media Library",
 			"summary"		=>	"Simple Media Library module for ProcessWire",
-			"version"		=>	"0.1.6",
+			"version"		=>	"0.1.4",
 			"autoload"		=>	true,
 			"singular"		=>	true,
 			"requires"		=>	array("ProcessPageEditLink", "ProcessWire>=3.0.0"),
@@ -54,6 +54,10 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 		$basepath = $this->config->paths->{$this->className()};
 		$versionts = str_replace('.', '', $info["version"]) . "-" . filemtime($basepath . "MediaLibrary.js");
 		$this->config->scripts->add($baseurl . "MediaLibrary.js?v=" . $versionts);
+		
+		$this->config->js('MediaLibrary', [
+			'statusMsg' => $this->_('Showing ##showing## of ##count## images')
+		]);
 	}
 	
 	public function hideLibraryPages(HookEvent $event) {
@@ -205,6 +209,22 @@ class MediaLibrary extends WireData implements Module, ConfigurableModule {
 				. "<div class='InputfieldContent'>\n"
 				. "<p class='description'>" . $this->_("Pick a media library to quickly select an image from its page") . "</p>\n"
 				. $f->render()
+				. "</div>"
+				. "</li>\n"
+		;
+		
+		$collapseIcon = "<i class='toggle-icon fa fa-angle-right' data-to='fa-angle-down fa-angle-right'></i>";
+		$input = $this->modules->get('InputfieldText');
+		$input->attr('id', 'mediaimagesfilter');
+		$input->label = $this->_("Filter images");
+		$input->attr('size', 20);
+		$input->collapsed = 1;
+		$html .= "\n<li class='Inputfield Inputfield_mediaimagesfilter InputfieldColumnWidthFirst' id='wrap_media_filter' title='" . $this->_("Filter Images") . "'>"
+				. "<label for='mediaimagesfilter' class='InputfieldHeader InputfieldStateToggle'>" . $this->_("Filter Images") . " $collapseIcon</label>\n"
+				. "<div class='InputfieldContent'>\n"
+				. "<p class='description'>" . $this->_("Start typing to filter images by name") . "</p>\n"
+				. $input->render()
+				. " <span id='mediaimagesfilterstatus'></span>"
 				. "</div>"
 				. "</li>\n"
 		;

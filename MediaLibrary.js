@@ -39,6 +39,30 @@ $(document).ready(function() {
 		}
 	});
 	
+	$('#mediaimagesfilter').on('keyup', function(evt) {
+		var count = 0;
+		var showing = 0;
+		var pattern = '' + $(evt.currentTarget).val();
+		$('#select_images > li').each(function(idx, el) {
+			if($(el).hasClass('select_images_field_label'))
+				return;
+			count++;
+			var img = $(el).find('img').first();
+			if(img) {
+				var url = $(img).data('original');
+				var name = url.replace(new RegExp('^.*/'), '');
+				if(name.includes(pattern.toLowerCase())) {
+					showing++;
+					$(el).show();
+				} else {
+					$(el).hide();
+				}
+			}
+		});
+		var msg = ProcessWire.config.MediaLibrary.statusMsg.replace('##showing##', showing).replace('##count##', count);
+		$('#mediaimagesfilterstatus').html(msg);
+	});
+	
 	$('#mediaimageslibrary, input[name=mediaimageslibrary]:radio').on('change', function(evt) {
 		$sel = $(this);
 		$page_id = $('#page_id');
